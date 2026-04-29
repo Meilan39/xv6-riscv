@@ -6,6 +6,7 @@ int
 main(int argc, char *argv[])
 {
   int i, fd;
+  int e = 0;
 
   if(argc < 2){
     fprintf(2, "Usage: touch files...\n");
@@ -15,10 +16,11 @@ main(int argc, char *argv[])
   for(i = 1; i < argc; i++){
     if((fd = open(argv[i], O_CREATE | O_RDWR)) < 0){
       fprintf(2, "touch: %s failed to create\n", argv[i]);
-      break;
+      e = 1;
+      continue;
     }
+    close(fd);
   }
-  close(fd);
 
-  exit(0);
+  exit(e);
 }

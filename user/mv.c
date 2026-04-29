@@ -10,15 +10,22 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  if(link(argv[1], argv[2]) < 0){
-    fprintf(2, "mv: cannot link %s to %s\n", argv[1], argv[2]);
-    exit(1);
-  }
+  /* do nothing if file names are identical */
+  if(strcmp(argv[1], argv[2]) != 0) {
 
-  if(unlink(argv[1]) < 0){
-    fprintf(2, "mv: failed to delete %s\n", argv[1]);
-    exit(1);
-  }
+    unlink(argv[2]); // sliently overwrite if dst exists
+
+    if(link(argv[1], argv[2]) < 0) {
+        fprintf(2, "mv: cannot link %s to %s\n", argv[1], argv[2]);
+        exit(1);
+    }
+
+    if(unlink(argv[1]) < 0) {
+        fprintf(2, "mv: failed to delete %s\n", argv[1]);
+        exit(1);
+    }
+
+  } 
 
   exit(0);
 }

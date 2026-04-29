@@ -31,9 +31,14 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  if(((src = open(argv[1], O_RDONLY)) < 0) ||
-     ((dst = open(argv[2], O_CREATE | O_WRONLY)) < 0)){
-    fprintf(2, "cp: cannot open %s or %s\n", argv[1], argv[2]);
+  if((src = open(argv[1], O_RDONLY)) < 0) {
+    fprintf(2, "cp: cannot open %s\n", argv[1]);
+    exit(1);
+  }
+
+  if((dst = open(argv[2], O_CREATE | O_WRONLY | O_TRUNC)) < 0) {
+    fprintf(2, "cp: cannot open %s\n", argv[2]);
+    close(src);
     exit(1);
   }
  
