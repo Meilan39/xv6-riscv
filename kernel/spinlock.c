@@ -12,8 +12,8 @@ void
 initlock(struct spinlock *lk, char *name)
 {
   lk->name = name;
-  lk->locked = 0;
-  lk->cpu = 0;
+  lk->locked = 0; // locked is 0 when unlocked, 1 when locked
+  lk->cpu = 0;    // the cpu that holds the lock
 }
 
 // Acquire the lock.
@@ -95,7 +95,7 @@ push_off(void)
   intr_off();
 
   if(mycpu()->noff == 0)
-    mycpu()->intena = old;
+    mycpu()->intena = old; // only save if depth 0 and interrupts were initially on
   mycpu()->noff += 1;
 }
 
@@ -108,6 +108,6 @@ pop_off(void)
   if(c->noff < 1)
     panic("pop_off");
   c->noff -= 1;
-  if(c->noff == 0 && c->intena)
+  if(c->noff == 0 && c->intena) // reenable if depth 0 and interrupts were initially on
     intr_on();
 }
