@@ -148,6 +148,7 @@ UPROGS=\
 	$U/_touch\
 	$U/_cp\
 	$U/_mv\
+	$U/_ping-pong\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
