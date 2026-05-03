@@ -102,6 +102,24 @@ allocpid()
   return pid;
 }
 
+int
+checkproc(int pid) {
+  struct proc *p;
+  int valid;
+
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    /* found -> check if pid is unused */
+    if (p->pid == pid) {
+      valid = (p->state != UNUSED); // valid:1, invalid:0
+      release(&p->lock);            // release after reading state
+      return valid ? 0 : -1;
+    }
+    release(&p->lock);              // release on both branches
+  }
+  return -1;                        // pid not found
+}
+
 // Look in the process table for an UNUSED proc.
 // If found, initialize state required to run in the kernel,
 // and return with p->lock held.

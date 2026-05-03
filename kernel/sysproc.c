@@ -22,6 +22,12 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
+/* replica of getpid() */
+uint64
+sys_my_getpid(void) {
+  return myproc()->pid;
+}
+
 uint64
 sys_fork(void)
 {
@@ -106,4 +112,11 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_check_proc(void) {
+  int pid;
+  argint(0, &pid);
+  return checkproc(pid);
 }
