@@ -3,6 +3,7 @@
 #include "memlayout.h"
 #include "riscv.h"
 #include "defs.h"
+#include "message.h"
 
 volatile static int started = 0;
 
@@ -26,6 +27,7 @@ main()
     plicinithart();  // ask PLIC for device interrupts
     binit();         // buffer cache
     iinit();         // inode table
+    msginit();       // initialize message buffer
     fileinit();      // file table
     virtio_disk_init(); // emulated hard disk
     userinit();      // first user process

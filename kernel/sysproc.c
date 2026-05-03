@@ -6,14 +6,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
-
-/* private message buffer */
-#define MSG_BUF_SIZE 256
-/* singleton */
-struct {
-  struct spinlock lock;
-  char buf[MSG_BUF_SIZE];
-} msg;
+#include "message.h"
 
 uint64
 sys_exit(void)
@@ -141,7 +134,8 @@ sys_get_msg(void) {
   }
   
   acquire(&msg.lock);
-  copyout(myproc()->pagetable, buf_ptr, msg.buf, buf_size);  
+  if(copyout(myproc()->pagetable, buf_ptr, msg.buf, buf_size) == -1)
+    buf_size = -1; // return with error
   release(&msg.lock);
 
   return buf_size; // return number of bytes read
@@ -159,7 +153,8 @@ sys_set_msg(void) {
   }
 
   acquire(&msg.lock);
-  copyin(myproc()->pagetable, msg.buf, buf_ptr, buf_size);  
+  if(copyin(myproc()->pagetable, msg.buf, buf_ptr, buf_size) == -1)
+    buf_size = -1; // return with error
   release(&msg.lock);
 
   return buf_size; // return number of bytes read
