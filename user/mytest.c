@@ -7,6 +7,9 @@ void t_check_proc(const char *pid_str);
 void t_check_proc_6();
 void t_msgset(const char *msg_str);
 void t_msgget();
+void t_get_pgdir();
+void t_validpg_num();
+
 
 int
 main(int argc, char *argv[]) {
@@ -19,7 +22,13 @@ main(int argc, char *argv[]) {
         } else
         if(strcmp(argv[1], "msgget") == 0) {
             t_msgget();
-        } 
+        } else
+        if(strcmp(argv[1], "get_pgdir") == 0) {
+            t_get_pgdir();
+        } else
+        if(strcmp(argv[1], "validpg_num") == 0) {
+            t_validpg_num();
+        }
         else  {
             goto usage;
         }
@@ -43,8 +52,10 @@ main(int argc, char *argv[]) {
 usage:
     fprintf(2, "Usage: mytest getpid\n");
     fprintf(2, "Usage: mytest msgget\n");
-    fprintf(2, "Usage: mytest check_proc <pid>\n");
+    fprintf(2, "Usage: mytest get_pgdir\n");
+    fprintf(2, "Usage: mytest validpg_num\n");
     fprintf(2, "Usage: mytest check_proc_6\n");
+    fprintf(2, "Usage: mytest check_proc <pid>\n");
     fprintf(2, "Usage: mytest msgset <message>\n");
     exit(0);
 }
@@ -83,4 +94,14 @@ void t_msgget() {
     } else {
         fprintf(2, "%s\n", buf);
     }
+}
+
+void t_get_pgdir() {
+    uint64 pgdir = get_pgdir();
+    fprintf(2, "page directory: 0x%lx\n", pgdir);
+}
+
+void t_validpg_num() {
+    int num = validpg_num();
+    fprintf(2, "valid page count: %d\n", num);
 }

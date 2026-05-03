@@ -105,6 +105,8 @@ extern uint64 sys_my_getpid(void);
 extern uint64 sys_check_proc(void);
 extern uint64 sys_get_msg(void);
 extern uint64 sys_set_msg(void);
+extern uint64 sys_get_pgdir(void);
+extern uint64 sys_validpg_num(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -134,6 +136,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_check_proc]    sys_check_proc,
 [SYS_get_msg]       sys_get_msg,
 [SYS_set_msg]       sys_set_msg,
+[SYS_get_pgdir]     sys_get_pgdir,
+[SYS_validpg_num]   sys_validpg_num,
 };
 
 void

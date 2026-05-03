@@ -484,3 +484,31 @@ ismapped(pagetable_t pagetable, uint64 va)
   }
   return 0;
 }
+
+/* return number of valid pages in the given pagetable */
+uint64
+validpg_num(pagetable_t pagetable)
+{
+  return validpg_num_helper(pagetable, 2);
+}
+
+/* recursive helper */
+uint64
+validpg_num_helper(pagetable_t pagetable, int level)
+{
+  uint64 count = 0;
+  level--;
+
+  for(int i = 0; i < 512; i++) {
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V) {
+      if(level == 0) { // leaf node -> count
+        count++;
+      } else {         // non-leaf node -> recurse
+        pagetable_t temp = (pagetable_t)PTE2PA(pte);
+        count += validpg_num_helper(temp, level);
+      }
+    }
+  }
+  return count;
+}

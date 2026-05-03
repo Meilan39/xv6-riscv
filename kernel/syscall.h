@@ -24,4 +24,5 @@
 #define SYS_check_proc  23
 #define SYS_get_msg     24
 #define SYS_set_msg     25
-
+#define SYS_get_pgdir   26
+#define SYS_validpg_num 27

@@ -46,3 +46,5 @@ entry("my_getpid");
 entry("check_proc");
 entry("get_msg");
 entry("set_msg");
+entry("get_pgdir");
+entry("validpg_num");

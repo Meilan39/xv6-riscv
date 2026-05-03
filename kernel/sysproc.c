@@ -159,3 +159,13 @@ sys_set_msg(void) {
 
   return buf_size; // return number of bytes read
 }
+
+uint64
+sys_get_pgdir(void) {
+  return (uint64)myproc()->pagetable;
+}
+
+uint64
+sys_validpg_num(void) {
+  return validpg_num(myproc()->pagetable);
+}
