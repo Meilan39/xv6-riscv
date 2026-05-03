@@ -7,6 +7,14 @@
 #include "proc.h"
 #include "vm.h"
 
+/* private message buffer */
+#define MSG_BUF_SIZE 256
+/* singleton */
+struct {
+  struct spinlock lock;
+  char buf[MSG_BUF_SIZE];
+} msg;
+
 uint64
 sys_exit(void)
 {
@@ -119,4 +127,40 @@ sys_check_proc(void) {
   int pid;
   argint(0, &pid);
   return checkproc(pid);
+}
+
+uint64
+sys_get_msg(void) {
+  uint64 buf_ptr; // buffer to write to
+  int buf_size;   // maximum bytes to write
+  argaddr(0, &buf_ptr);
+  argint(1, &buf_size);
+
+  if(buf_size <= 0 || buf_size > MSG_BUF_SIZE) {
+    return -1; // error: invalid buffer size
+  }
+  
+  acquire(&msg.lock);
+  copyout(myproc()->pagetable, buf_ptr, msg.buf, buf_size);  
+  release(&msg.lock);
+
+  return buf_size; // return number of bytes read
+}
+
+uint64
+sys_set_msg(void) {
+  uint64 buf_ptr;   // buffer to read from
+  int buf_size;     // number of bytes to read
+  argaddr(0, &buf_ptr);
+  argint(1, &buf_size);
+
+  if(buf_size <= 0 || buf_size > MSG_BUF_SIZE) {
+    return -1; // error: invalid buffer size
+  }
+
+  acquire(&msg.lock);
+  copyin(myproc()->pagetable, msg.buf, buf_ptr, buf_size);  
+  release(&msg.lock);
+
+  return buf_size; // return number of bytes read
 }

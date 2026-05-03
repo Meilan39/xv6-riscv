@@ -22,3 +22,6 @@
 #define SYS_close       21
 #define SYS_my_getpid   22
 #define SYS_check_proc  23
+#define SYS_get_msg     24
+#define SYS_set_msg     25
+

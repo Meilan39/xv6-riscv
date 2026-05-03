@@ -103,6 +103,8 @@ extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_my_getpid(void);
 extern uint64 sys_check_proc(void);
+extern uint64 sys_get_msg(void);
+extern uint64 sys_set_msg(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -130,6 +132,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_close]         sys_close,
 [SYS_my_getpid]     sys_my_getpid,
 [SYS_check_proc]    sys_check_proc,
+[SYS_get_msg]       sys_get_msg,
+[SYS_set_msg]       sys_set_msg,
 };
 
 void

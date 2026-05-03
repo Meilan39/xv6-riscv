@@ -43,4 +43,6 @@ entry("sbrk");
 entry("pause");
 entry("uptime");
 entry("my_getpid");
-entry("check_proc")
+entry("check_proc");
+entry("get_msg");
+entry("set_msg");

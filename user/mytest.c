@@ -5,6 +5,8 @@
 void t_getpid();
 void t_check_proc(const char *pid_str);
 void t_check_proc_6();
+void t_msgset(const char *msg_str);
+void t_msgget();
 
 int
 main(int argc, char *argv[]) {
@@ -14,13 +16,20 @@ main(int argc, char *argv[]) {
         } else
         if(strcmp(argv[1], "check_proc_6") == 0) {
             t_check_proc_6();
+        } else
+        if(strcmp(argv[1], "msgget") == 0) {
+            t_msgget();
         } 
         else  {
             goto usage;
         }
-    } else if(argc == 3) {
+    } else 
+    if(argc == 3) {
         if(strcmp(argv[1], "check_proc") == 0) {
             t_check_proc(argv[2]);
+        } else 
+        if(strcmp(argv[1], "msgset") == 0) {
+            t_msgset(argv[2]);
         }
         else {
             goto usage;
@@ -33,8 +42,10 @@ main(int argc, char *argv[]) {
     exit(0);
 usage:
     fprintf(2, "Usage: mytest getpid\n");
-    fprintf(2, "Usage: mytest check_proc pid\n");
+    fprintf(2, "Usage: mytest msgget\n");
+    fprintf(2, "Usage: mytest check_proc <pid>\n");
     fprintf(2, "Usage: mytest check_proc_6\n");
+    fprintf(2, "Usage: mytest msgset <message>\n");
     exit(0);
 }
 
@@ -55,5 +66,21 @@ void t_check_proc_6() {
     for(int i = 1; i <= 6; i++) {
         fprintf(2, "pid %d is %s\n", i, 
             check_proc(i) == 0 ? "valid" : "invalid");
+    }
+}
+
+void t_msgset(const char *msg_str) {
+    /* read immediate from stack */
+    if(set_msg(msg_str, strlen(msg_str)) < 0) {
+        fprintf(2, "failed to set message\n");
+    }
+}
+
+void t_msgget() {
+    char buf[256];
+    if(get_msg(buf, 256) < 0) {
+        fprintf(2, "failed to get message\n");
+    } else {
+        fprintf(2, "%s\n", buf);
     }
 }
