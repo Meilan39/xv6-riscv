@@ -30,6 +30,7 @@ int get_msg(char *, int);
 int set_msg(const char *, int);
 uint64 get_pgdir(void);
 uint64 validpg_num(void);
+int getcwd(char *, int);
 
 // ulib.c
 int stat(const char*, struct stat*);

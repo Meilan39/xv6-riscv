@@ -4,9 +4,12 @@
 #include "param.h"
 #include "memlayout.h"
 #include "spinlock.h"
+#include "sleeplock.h"
 #include "proc.h"
 #include "vm.h"
 #include "message.h"
+#include "fs.h"
+#include "file.h"
 
 uint64
 sys_exit(void)
@@ -168,4 +171,76 @@ sys_get_pgdir(void) {
 uint64
 sys_validpg_num(void) {
   return validpg_num(myproc()->pagetable);
+}
+
+uint64
+getcwd_helper(struct inode *curr, char *buffer, int *idx)
+{
+  if(curr->inum == ROOTINO) {
+    buffer[(*idx)++] = '~'; 
+    buffer[(*idx)++] = '/'; 
+    return 0;
+  }
+  
+  ilock(curr);
+  struct inode *parent = dirlookup(curr, "..", 0);
+  iunlock(curr);
+  if(parent == 0) return -1;
+
+  struct dirent de;
+  int found = 0;
+  ilock(parent);
+  for(uint off = 0; off < parent->size; off += sizeof(de)){
+    if(readi(parent, 0, (uint64)&de, off, sizeof(de)) != sizeof(de)) 
+      break;
+    if(de.inum == curr->inum){
+      found = 1;
+      break;
+    }
+  }
+  iunlock(parent);
+
+  if(!found){
+    iput(parent);
+    return -1;
+  }
+
+  if(getcwd_helper(parent, buffer, idx) < 0){
+    iput(parent);
+    return -1;
+  }
+
+  if(parent->inum != ROOTINO) 
+    buffer[(*idx)++] = '/'; 
+  int len = strlen(de.name);
+  memmove(&buffer[*idx], de.name, len);
+  *idx += len;
+
+  iput(parent);
+  return 0;
+}
+
+uint64
+sys_getcwd(void) {
+  char buffer[256];
+  int err = 0, idx = 0;
+  struct inode *cwd = myproc()->cwd;
+  uint64 buf_ptr;
+  int buf_size;
+
+  argaddr(0, &buf_ptr);
+  argint(1, &buf_size);
+
+  begin_op();
+  err = getcwd_helper(cwd, buffer, &idx);
+  end_op();
+  buffer[idx++] = '\0';
+
+  if(err == -1)
+    return -1;
+  if(idx > buf_size)
+    return -1;
+  if(copyout(myproc()->pagetable, buf_ptr, buffer, idx) == -1)
+    return -1;
+  return idx;
 }
