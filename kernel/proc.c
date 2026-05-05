@@ -464,6 +464,7 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+        printf("CPU %d switched to pid: %d\n", cpuid(), p->pid);
         swtch(&c->context, &p->context);
 
         // Process is done running for now.

@@ -1,6 +1,8 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
+#define rep 5
+
 int main(void) {
     int p1[2], p2[2];
     int start, end;
@@ -13,7 +15,7 @@ int main(void) {
     if(fork() == 0) {
         close(p1[1]);
         close(p2[0]);
-        for(int i = 0; i < 100000; i++) {
+        for(int i = 0; i < rep; i++) {
             if(read(p1[0], msg, n) < n) {
                 fprintf(2, "read error\n");
                 exit(1);
@@ -31,7 +33,7 @@ int main(void) {
         close(p2[1]);
 
         start = uptime();
-        for(int i = 0; i < 100000; i++) {
+        for(int i = 0; i < rep; i++) {
             if(write(p1[1], msg, n) < n) {
                 fprintf(2, "write error\n");
                 exit(1);
