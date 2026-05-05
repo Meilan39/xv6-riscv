@@ -1,5 +1,6 @@
 #define SBRK_ERROR ((char *)-1)
 
+#include "kernel/pstat.h"
 struct stat;
 
 // system calls
@@ -31,6 +32,8 @@ int set_msg(const char *, int);
 uint64 get_pgdir(void);
 uint64 validpg_num(void);
 int getcwd(char *, int);
+int settickets(int tickets);
+int getpinfo(struct pstat *);
 
 // ulib.c
 int stat(const char*, struct stat*);

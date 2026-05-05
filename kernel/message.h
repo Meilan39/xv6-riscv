@@ -1,7 +1,6 @@
 #ifndef MESSAGE
 #define MESSAGE
 
-#include "defs.h"
 #include "types.h"
 #include "spinlock.h"
 

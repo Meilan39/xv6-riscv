@@ -10,6 +10,7 @@
 #include "message.h"
 #include "fs.h"
 #include "file.h"
+#include "pstat.h"
 
 uint64
 sys_exit(void)
@@ -243,4 +244,34 @@ sys_getcwd(void) {
   if(copyout(myproc()->pagetable, buf_ptr, buffer, idx) == -1)
     return -1;
   return idx;
+}
+
+uint64
+sys_settickets(void) {
+  int ticket;
+  argint(0, &ticket);
+
+  if(ticket < 10 || 150 < ticket || ticket % 10)
+    return -1;
+
+  struct proc *p = myproc();
+  acquire(&p->lock);
+  p->ticket = ticket;
+  p->stride = STRIDE_DIVISOR / p->ticket;
+  release(&p->lock);
+
+  return 0;
+}
+
+uint64
+sys_getpinfo(void) {
+  uint64 addr;
+  argaddr(0, &addr);
+
+  struct pstat kp;
+  getpinfo(&kp);
+
+  if(copyout(myproc()->pagetable, addr, (char *)&kp, sizeof(kp)) < 0)
+    return -1;
+  return 0;  
 }

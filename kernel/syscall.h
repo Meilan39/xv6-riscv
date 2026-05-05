@@ -27,3 +27,5 @@
 #define SYS_get_pgdir   26
 #define SYS_validpg_num 27
 #define SYS_getcwd      28
+#define SYS_settickets  29
+#define SYS_getpinfo    30

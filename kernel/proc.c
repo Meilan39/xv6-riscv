@@ -5,12 +5,15 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "pstat.h"
 
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
 
 struct proc *initproc;
+
+int maxpass = 0;
 
 int nextpid = 1;
 struct spinlock pid_lock;
@@ -142,6 +145,9 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->ticket = 10; // default minimum
+  p->stride = STRIDE_DIVISOR / p->ticket;
+  p->pass   = maxpass;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -455,29 +461,44 @@ scheduler(void)
     intr_on();
     intr_off();
 
-    int found = 0;
+    struct proc *minp = 0;
     for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
       if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        printf("CPU %d switched to pid: %d\n", cpuid(), p->pid);
-        swtch(&c->context, &p->context);
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
+        acquire(&p->lock);
+        if(minp == 0 || p->pass < minp->pass) 
+          minp = p;
+        release(&p->lock);
       }
-      release(&p->lock);
     }
-    if(found == 0) {
+
+    if(minp == 0) {
       // nothing to run; stop running on this core until an interrupt.
       asm volatile("wfi");
+      continue;
     }
+
+    acquire(&minp->lock);
+    if(minp->state == RUNNABLE) {
+      // Switch to chosen process.  It is the process's job
+      // to release its lock and then reacquire it
+      // before jumping back to us.
+      minp->state = RUNNING;
+      c->proc = minp;
+
+      /* new processes run once and get set to maxpass */
+      minp->pass += minp->stride;
+      maxpass = (maxpass < minp->pass ? minp->pass : maxpass);
+
+      // printf("CPU %d switched to pid: %d\n", cpuid(), p->pid);
+      // printf("pid: %d | pass: %d | maxpass: %d\n", minp->pid, minp->pass, maxpass);
+
+      swtch(&c->context, &minp->context);
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
+    }
+    release(&minp->lock);
   }
 }
 
@@ -705,5 +726,20 @@ procdump(void)
       state = "???";
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
+  }
+}
+
+void 
+getpinfo(struct pstat *ps) {
+  struct proc *p;
+  int i = 0;
+  for(p = proc; p < &proc[NPROC]; p++, i++) {
+    acquire(&p->lock);
+    ps->inuse[i] = (p->state != UNUSED);
+    ps->pid[i] = p->pid;
+    ps->ticket[i] = p->ticket;
+    ps->stride[i] = p->stride;
+    ps->pass[i] = p->pass;
+    release(&p->lock);
   }
 }

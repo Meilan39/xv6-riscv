@@ -79,6 +79,8 @@ struct trapframe {
   /* 280 */ uint64 t6;
 };
 
+#define STRIDE_DIVISOR 10000
+
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
@@ -91,6 +93,9 @@ struct proc {
   int killed;                  // If non-zero, have been killed
   int xstate;                  // Exit status to be returned to parent's wait
   int pid;                     // Process ID
+  int ticket;                  // number of tickets
+  int stride;                  // stride of the process
+  int pass;                    // current pass
 
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process

@@ -49,3 +49,5 @@ entry("set_msg");
 entry("get_pgdir");
 entry("validpg_num");
 entry("getcwd");
+entry("settickets");
+entry("getpinfo");
