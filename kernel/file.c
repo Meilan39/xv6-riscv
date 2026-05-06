@@ -147,6 +147,13 @@ filewrite(struct file *f, uint64 addr, int n)
       return -1;
     ret = devsw[f->major].write(1, addr, n);
   } else if(f->type == FD_INODE){
+    /* set offset to end on append */
+    if(f->append) {
+      ilock(f->ip);
+      f->off = f->ip->size;
+      iunlock(f->ip);
+    }
+
     // write a few blocks at a time to avoid exceeding
     // the maximum log transaction size, including
     // i-node, indirect block, allocation blocks,
