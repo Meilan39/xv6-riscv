@@ -2,7 +2,6 @@
 #include "kernel/pstat.h"
 #include "user.h"
 
-// We redefine this here for ps-test to use
 void print_pstat(struct pstat *ps) {
     printf("pid\ttickets\tstride\tpass\titerations\n");    
     for(int i = 0; i < NPROC; i++) {

@@ -95,6 +95,20 @@ sys_write(void)
 }
 
 uint64
+sys_lseek(void) {
+  int fd, offset, whence;
+  struct file *f;
+
+  argint(0, &fd);
+  argint(1, &offset);
+  argint(2, &whence);
+  if(argfd(0, &fd, &f) < 0) 
+    return -1;
+
+  return fileseek(f, offset, whence);
+}
+
+uint64
 sys_close(void)
 {
   int fd;

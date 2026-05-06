@@ -51,3 +51,4 @@ entry("validpg_num");
 entry("getcwd");
 entry("settickets");
 entry("getpinfo");
+entry("lseek");

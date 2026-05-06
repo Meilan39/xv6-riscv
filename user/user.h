@@ -34,6 +34,7 @@ uint64 validpg_num(void);
 int getcwd(char *, int);
 int settickets(int tickets);
 int getpinfo(struct pstat *);
+int lseek(int fd, int offset, int whence);
 
 // ulib.c
 int stat(const char*, struct stat*);

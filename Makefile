@@ -154,6 +154,7 @@ UPROGS=\
 	$U/_pwd\
 	$U/_ps\
 	$U/_ps-test\
+	$U/_lseek-test\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

@@ -29,3 +29,5 @@
 #define SYS_getcwd      28
 #define SYS_settickets  29
 #define SYS_getpinfo    30
+#define SYS_lseek       31
+
