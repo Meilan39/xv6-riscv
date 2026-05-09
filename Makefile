@@ -155,6 +155,8 @@ UPROGS=\
 	$U/_ps\
 	$U/_ps-test\
 	$U/_lseek-test\
+	$U/_clone-test\
+	$U/_cow-test\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

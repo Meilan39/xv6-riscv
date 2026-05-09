@@ -52,3 +52,4 @@ entry("getcwd");
 entry("settickets");
 entry("getpinfo");
 entry("lseek");
+entry("clone");

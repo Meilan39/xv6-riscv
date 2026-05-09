@@ -58,8 +58,10 @@ void            ireclaim(int);
 
 // kalloc.c
 void*           kalloc(void);
+void*           kincref(void *);
 void            kfree(void *);
 void            kinit(void);
+uint64          kgetref(void *);
 
 // log.c
 void            initlog(int, struct superblock*);
@@ -82,6 +84,7 @@ void            printfinit(void);
 int             cpuid(void);
 void            kexit(int);
 int             kfork(void);
+int             kclone(void);   
 int             growproc(int);
 void            proc_mapstacks(pagetable_t);
 pagetable_t     proc_pagetable(struct proc *);
@@ -161,6 +164,8 @@ void            kvmmap(pagetable_t, uint64, uint64, uint64, int);
 int             mappages(pagetable_t, uint64, uint64, uint64, int);
 pagetable_t     uvmcreate(void);
 uint64          uvmalloc(pagetable_t, uint64, uint64, int);
+int             uvmclone(pagetable_t, pagetable_t, uint64, uint64);
+int             uvmcow(pagetable_t, pagetable_t, uint64);
 uint64          uvmdealloc(pagetable_t, uint64, uint64);
 int             uvmcopy(pagetable_t, pagetable_t, uint64);
 void            uvmfree(pagetable_t, uint64);
@@ -172,6 +177,8 @@ int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
 int             ismapped(pagetable_t, uint64);
+uint64          catchalloc(pagetable_t, uint64);
+uint64          catchcopy(pagetable_t, uint64, pte_t *);
 uint64          vmfault(pagetable_t, uint64, int);
 uint64          validpg_num(pagetable_t);
 uint64          validpg_num_helper(pagetable_t, int);

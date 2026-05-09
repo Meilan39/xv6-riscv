@@ -35,6 +35,7 @@ int getcwd(char *, int);
 int settickets(int tickets);
 int getpinfo(struct pstat *);
 int lseek(int fd, int offset, int whence);
+int clone(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -323,6 +323,76 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   return -1;
 }
 
+int
+uvmclone(pagetable_t old, pagetable_t new, uint64 sz, uint64 stk) {
+  pte_t *pte;
+  uint64 pa, i;
+  uint flags;
+  char *mem;
+
+  stk = PGROUNDDOWN(stk); // stack base pointer
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walk(old, i, 0)) == 0)
+      continue;   // page table entry hasn't been allocated
+    if((*pte & PTE_V) == 0)
+      continue;   // physical page hasn't been allocated
+
+    pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte);
+    if(i == stk) {
+      /* stack: copy stack to new physical address */
+      if((mem = kalloc()) == 0)
+        goto err;
+      memmove(mem, (char*)pa, PGSIZE);
+    } else {
+      /* not stack: increment reference count */
+      if((mem = kincref((void*)pa)) == 0)
+        goto err;
+    }
+
+    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0)
+      goto err;
+  }
+
+  sfence_vma();
+  return 0;
+
+ err:
+  uvmunmap(new, 0, i / PGSIZE, 1);
+  return -1;
+}
+
+int
+uvmcow(pagetable_t old, pagetable_t new, uint64 sz) {
+  pte_t *pte;
+  uint64 pa, i;
+  uint flags;
+  char *mem;
+
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walk(old, i, 0)) == 0)
+      continue;   // page table entry hasn't been allocated
+    if((*pte & PTE_V) == 0)
+      continue;   // physical page hasn't been allocated
+
+    *pte = (*pte & ~PTE_W) | PTE_COW; // remove write permission and signal CoW
+    pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte); // remove write permission
+    if((mem = kincref((void*)pa)) == 0)
+      goto err;
+
+    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0)
+      goto err;
+  }
+  /* invalidate tlb */
+  sfence_vma();
+  return 0;
+
+ err:
+  uvmunmap(new, 0, i / PGSIZE, 1);
+  return -1;
+}
+
 // mark a PTE invalid for user access.
 // used by exec for the user stack guard page.
 void
@@ -445,19 +515,11 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   }
 }
 
-// allocate and map user memory if process is referencing a page
-// that was lazily allocated in sys_sbrk().
-// returns 0 if va is invalid or already mapped, or if
-// out of physical memory, and physical address if successful.
 uint64
-vmfault(pagetable_t pagetable, uint64 va, int read)
-{
+catchalloc(pagetable_t pagetable, uint64 va) {
   uint64 mem;
   struct proc *p = myproc();
 
-  if (va >= p->sz)
-    return 0;
-  va = PGROUNDDOWN(va);
   if(ismapped(pagetable, va)) {
     return 0;
   }
@@ -470,6 +532,56 @@ vmfault(pagetable_t pagetable, uint64 va, int read)
     return 0;
   }
   return mem;
+}
+
+uint64
+catchcopy(pagetable_t pagetable, uint64 va, pte_t *pte) {
+  uint64 pa = PTE2PA(*pte);
+  uint64 ref = kgetref((void*)pa);
+
+  if(ref > 1) {
+    /* more than one reference -> copy physical page + enable write */
+    uint64 mem = (uint64) kalloc();
+    if(mem == 0) return 0;
+    memmove((void *)mem, (void *)pa, PGSIZE);
+    /* new physical address + disable cow + enable write */
+    *pte = PA2PTE(mem) | (PTE_FLAGS(*pte) & ~PTE_COW) | PTE_W;
+    kfree((void *)pa); // decrement reference
+    sfence_vma();
+    return mem;
+  } else {
+    /* exactly one reference -> disable cow + enable write */
+    *pte = (*pte & ~PTE_COW) | PTE_W;
+    sfence_vma();
+    return pa;
+  }
+}
+
+// allocate and map user memory if process is referencing a page
+// that was lazily allocated in sys_sbrk().
+// returns 0 if va is invalid or already mapped, or if
+// out of physical memory, and physical address if successful.
+uint64
+vmfault(pagetable_t pagetable, uint64 va, int read)
+{
+  pte_t *pte;
+  struct proc *p = myproc();
+
+  va = PGROUNDDOWN(va);
+  if(va >= p->sz) // in bound check
+    return 0;
+
+  /* if page not mapped, catch lazy allocate */
+  if((pte = walk(pagetable, va, 0)) == 0 || (*pte & PTE_V) == 0) {
+    return catchalloc(pagetable, va);
+  } 
+  
+  /* if CoW is enabled, catch copy on write */
+  if(*pte & PTE_COW) {
+    return catchcopy(pagetable, va, pte);
+  }
+
+  return 0;
 }
 
 int

@@ -275,3 +275,8 @@ sys_getpinfo(void) {
     return -1;
   return 0;  
 }
+
+uint64
+sys_clone(void) {
+  return kclone();
+}

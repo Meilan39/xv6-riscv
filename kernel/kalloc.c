@@ -23,10 +23,17 @@ struct {
   struct run *freelist;
 } kmem;
 
+struct {
+  struct spinlock lock;
+  uint8 ref[PAGES];
+} kref;
+
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
+  initlock(&kref.lock, "kref");
+  memset(kref.ref, 1, sizeof(kref.ref));
   freerange(end, (void*)PHYSTOP);
 }
 
@@ -50,6 +57,14 @@ kfree(void *pa)
 
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
+
+  // only free if ref count is 1
+  acquire(&kref.lock);
+  if(--kref.ref[PAGENUM(pa)] > 0) {
+    release(&kref.lock);
+    return;
+  }
+  release(&kref.lock);
 
   // Fill with junk to catch dangling refs.
   memset(pa, 1, PGSIZE);
@@ -76,7 +91,35 @@ kalloc(void)
     kmem.freelist = r->next;
   release(&kmem.lock);
 
-  if(r)
+  if(r) {
     memset((char*)r, 5, PGSIZE); // fill with junk
+
+    acquire(&kref.lock);
+    kref.ref[PAGENUM(r)] = 1; // initial reference count
+    release(&kref.lock);
+  }
   return (void*)r;
+}
+
+uint64
+kgetref(void *pa) {
+  if(PAGENUM(pa) < 0 || PAGENUM(pa) >= PAGES)
+    panic("kref");
+
+  acquire(&kref.lock);
+  uint64 ref = kref.ref[PAGENUM(pa)];
+  release(&kref.lock);
+  return ref;
+}
+
+/* parallels kalloc but simply increments reference */
+void *
+kincref(void *pa) {
+  if(PAGENUM(pa) < 0 || PAGENUM(pa) >= PAGES)
+    return 0;
+
+  acquire(&kref.lock);
+  kref.ref[PAGENUM(pa)]++;
+  release(&kref.lock);
+  return pa;
 }
