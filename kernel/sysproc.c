@@ -280,3 +280,57 @@ uint64
 sys_clone(void) {
   return kclone();
 }
+
+uint64
+sys_sem_alloc(void)
+{
+  return sem_alloc();
+}
+
+uint64
+sys_sem_free(void)
+{
+  uint idx;
+  argint(0, (int*)&idx);
+  sem_free(idx);
+  return 0;
+}
+
+uint64
+sys_sem_init(void)
+{
+  uint idx;
+  uint value;
+  
+  argint(0, (int*)&idx);
+  argint(1, (int*)&value);
+  
+  sem_init(idx, value);
+  return 0;
+}
+
+uint64
+sys_sem_wait(void)
+{
+  uint idx;
+  argint(0, (int*)&idx);
+  sem_wait(idx);
+  return 0;
+}
+
+uint64
+sys_sem_post(void)
+{
+  uint idx;
+  argint(0, (int*)&idx);
+  sem_post(idx);
+  return 0;
+}
+
+uint64
+sys_sem_waiting(void)
+{
+  uint idx;
+  argint(0, (int*)&idx);
+  return sem_waiting(idx);
+}

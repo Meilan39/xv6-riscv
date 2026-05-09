@@ -53,3 +53,8 @@ entry("settickets");
 entry("getpinfo");
 entry("lseek");
 entry("clone");
+entry("sem_alloc");
+entry("sem_free");
+entry("sem_init");
+entry("sem_wait");
+entry("sem_post");

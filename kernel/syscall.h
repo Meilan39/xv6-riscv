@@ -31,3 +31,8 @@
 #define SYS_getpinfo    30
 #define SYS_lseek       31
 #define SYS_clone       32
+#define SYS_sem_alloc   33
+#define SYS_sem_free    34
+#define SYS_sem_init    35
+#define SYS_sem_wait    36
+#define SYS_sem_post    37

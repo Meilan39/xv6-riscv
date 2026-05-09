@@ -126,6 +126,14 @@ void            releasesleep(struct sleeplock*);
 int             holdingsleep(struct sleeplock*);
 void            initsleeplock(struct sleeplock*, char*);
 
+// semaphore.c
+uint            sem_alloc();
+void            sem_free(uint idx);
+void            sem_init(uint idx, uint value);
+void            sem_wait(uint idx);
+void            sem_post(uint idx);
+uint            sem_waiting(uint idx);
+
 // string.c
 int             memcmp(const void*, const void*, uint);
 void*           memmove(void*, const void*, uint);

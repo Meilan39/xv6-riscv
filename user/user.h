@@ -36,6 +36,12 @@ int settickets(int tickets);
 int getpinfo(struct pstat *);
 int lseek(int fd, int offset, int whence);
 int clone(void);
+int sem_alloc(void);
+int sem_free(int idx);
+int sem_init(int idx, uint value);
+int sem_wait(int idx);
+int sem_post(int idx);
+int sem_waiting(int idx);
 
 // ulib.c
 int stat(const char*, struct stat*);
